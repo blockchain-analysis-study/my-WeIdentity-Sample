@@ -99,9 +99,10 @@ public class DemoServiceImpl implements DemoService {
             return createResult;
         }
 
+        // todo  将 私钥 和 注册DID的结果存储到本地指定文件中
         PrivateKeyUtil.savePrivateKey(
             PrivateKeyUtil.KEY_DIR,
-            createResult.getResult(),
+            createResult.getResult(), // 这里面是 weId
             privateKey
         );
 
@@ -134,14 +135,23 @@ public class DemoServiceImpl implements DemoService {
 
 
     /**
+    *
+    *  权威发行者   委员会   和 UseAgent 都调用了这里 注册对应的 WeId
+    *  并将 PriKey 存储在本地
      * 创建weid.
      * @return
      */
     public ResponseData<CreateWeIdDataResult> createWeId() {
 
+
+        // todo 这里将 WeId 存储在chain
         ResponseData<CreateWeIdDataResult> response = createWeIdWithSetAttr();
         // if weId is created successfully, save its private key.
+        //
+        // 如果将 WeId 存储到 chain 成功, 则我们需要在本地文件保存 priKey
         if (response.getErrorCode().intValue() == ErrorCode.SUCCESS.getCode()) {
+
+            // 在本地 文件 保存 priKey
             PrivateKeyUtil.savePrivateKey(
                 PrivateKeyUtil.KEY_DIR,
                 response.getResult().getWeId(),
@@ -153,11 +163,14 @@ public class DemoServiceImpl implements DemoService {
          *  private keys are not allowed to be transmitted over http, so this place
          *  annotates the return of private keys to avoid misuse.
          */
+        // priKey 不对 Http 接口外部返回
         response.getResult().setUserWeIdPrivateKey(null);
         return response;
     }
 
     /**
+    * 注册 WeId 并 设置 Document 中某些关联字段
+    *
      * create weId and set related properties.
      * 
      * @return returns the create weId and public private keys
@@ -167,6 +180,8 @@ public class DemoServiceImpl implements DemoService {
         logger.info("begin create weId and set attribute");
 
         // 1, create weId, this method automatically creates public and private keys
+        //
+        // 使用本地的公私钥对, 创建 weId 并存储在chain
         ResponseData<CreateWeIdDataResult> createResult = weIdService.createWeId();
         logger.info(
             "weIdService is result,errorCode:{},errorMessage:{}",
@@ -178,6 +193,8 @@ public class DemoServiceImpl implements DemoService {
         }
 
         // 2, call set public key
+        //
+        // 将 pubKey 存到chain
         ResponseData<Boolean> setPublicKeyRes = this.setPublicKey(createResult.getResult());
         if (!setPublicKeyRes.getResult()) {
             createResult.setErrorCode(
@@ -187,6 +204,8 @@ public class DemoServiceImpl implements DemoService {
         }
 
         // 3, call set authentication
+        //
+        // 将 认证方式 存到chain
         ResponseData<Boolean> setAuthenticateRes = this.setAuthentication(createResult.getResult());
         if (!setAuthenticateRes.getResult()) {
             createResult.setErrorCode(
@@ -198,6 +217,7 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    *  TODO 注意这里操作 DID的 Document
      * Set Public Key For WeIdentity DID Document.
      *
      * @param createWeIdDataResult the object of CreateWeIdDataResult
@@ -206,6 +226,8 @@ public class DemoServiceImpl implements DemoService {
     private ResponseData<Boolean> setPublicKey(CreateWeIdDataResult createWeIdDataResult) {
 
         // build setPublicKey parameters.
+        //
+        // 构建 publicKey 参数
         SetPublicKeyArgs setPublicKeyArgs = new SetPublicKeyArgs();
         setPublicKeyArgs.setWeId(createWeIdDataResult.getWeId());
         setPublicKeyArgs.setPublicKey(createWeIdDataResult.getUserWeIdPublicKey().getPublicKey());
@@ -214,6 +236,8 @@ public class DemoServiceImpl implements DemoService {
             .setPrivateKey(createWeIdDataResult.getUserWeIdPrivateKey().getPrivateKey());
 
         // call SDK method to chain set attribute.
+        //
+        //
         ResponseData<Boolean> setResponse = weIdService.setPublicKey(setPublicKeyArgs);
         logger.info(
             "setPublicKey is result,errorCode:{},errorMessage:{}",
@@ -224,6 +248,7 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    *  TODO 注意这里操作 DID的 Document
      * Set Authentication For WeIdentity DID Document.
      *
      * @param createWeIdDataResult createWeIdDataResult the object of CreateWeIdDataResult
@@ -232,6 +257,8 @@ public class DemoServiceImpl implements DemoService {
     private ResponseData<Boolean> setAuthentication(CreateWeIdDataResult createWeIdDataResult) {
 
         // build setAuthentication parameters.
+        //
+        // 组装 认证方式 参数
         SetAuthenticationArgs setAuthenticationArgs = new SetAuthenticationArgs();
         setAuthenticationArgs.setWeId(createWeIdDataResult.getWeId());
         setAuthenticationArgs
@@ -251,6 +278,7 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    * 注册一个 权威发行者
      * register on the chain as an authoritative body.
      * 
      * @param authorityName the name of the issue
@@ -261,15 +289,17 @@ public class DemoServiceImpl implements DemoService {
 
         // build registerAuthorityIssuer parameters.
         AuthorityIssuer authorityIssuerResult = new AuthorityIssuer();
-        authorityIssuerResult.setWeId(issuer);
-        authorityIssuerResult.setName(authorityName);
-        authorityIssuerResult.setAccValue("0");
+        authorityIssuerResult.setWeId(issuer);  // 权威发行者的 weId
+        authorityIssuerResult.setName(authorityName); // 权威发行者的名称
+        authorityIssuerResult.setAccValue("0"); // todo 这个是啥 ??
 
         RegisterAuthorityIssuerArgs registerAuthorityIssuerArgs = new RegisterAuthorityIssuerArgs();
         registerAuthorityIssuerArgs.setAuthorityIssuer(authorityIssuerResult);
         registerAuthorityIssuerArgs.setWeIdPrivateKey(new WeIdPrivateKey());
 
         // getting SDK private key from file.
+        //
+        // 加载 自己的 priKey
         String privKey = FileUtil.getDataByPath(PrivateKeyUtil.SDK_PRIVKEY_PATH);
 
         registerAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(privKey);
@@ -285,6 +315,7 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    * 往 chain 上注册 CPT 模板信息
      * registered CPT.
      * 
      * @param publisher the weId of the publisher
@@ -299,6 +330,8 @@ public class DemoServiceImpl implements DemoService {
         Map<String, Object> claim) {
 
         // build registerCpt parameters.
+        //
+        // 构建 注册CPT模板 参数
         WeIdAuthentication weIdAuthentication = new WeIdAuthentication();
         weIdAuthentication.setWeId(publisher);
         weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey());
@@ -306,9 +339,11 @@ public class DemoServiceImpl implements DemoService {
 
         CptMapArgs cptMapArgs = new CptMapArgs();
         cptMapArgs.setWeIdAuthentication(weIdAuthentication);
-        cptMapArgs.setCptJsonSchema(claim);
+        cptMapArgs.setCptJsonSchema(claim); // 这是个 map哦
 
         // create CPT by SDK
+        //
+        // 注册 CPT 模板信息
         ResponseData<CptBaseInfo> response = cptService.registerCpt(cptMapArgs);
         logger.info(
             "registerCpt is result,errorCode:{},errorMessage:{}", 
@@ -319,6 +354,7 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    * TODO 创建 一个 凭证详情
      * create credential.
      * 
      * @param cptId the cptId of CPT 
@@ -335,6 +371,8 @@ public class DemoServiceImpl implements DemoService {
         Map<String, Object> claimDate) {
 
         // build createCredential parameters.
+        //
+        // 构建 凭证入参
         CreateCredentialArgs registerCptArgs = new CreateCredentialArgs();
         registerCptArgs.setCptId(cptId);
         registerCptArgs.setIssuer(issuer);
@@ -347,6 +385,13 @@ public class DemoServiceImpl implements DemoService {
             .setExpirationDate(System.currentTimeMillis() + EXPIRATION_DATE);
 
         // create credentials by SDK.
+        //
+        // 发起 创建凭证
+        //
+        // 主要是校验入参, 根据入参 构建出 credential 的各个字段, 其中主要有 选择性披露的字段 和  相关证明(签名)
+        //  其中还声称了 对应 credential 的Id (由 UUID 生成)
+        //
+        // todo 可以知道这些动作其实现实中都是在 第三方机构 做的, 因为 电子凭证是 发行方颁发的哦
         ResponseData<CredentialWrapper> response = 
             credentialService.createCredential(registerCptArgs);
         logger.info(
@@ -358,6 +403,9 @@ public class DemoServiceImpl implements DemoService {
     }
 
     /**
+    *
+    * todo 用人单位校验 Credential 的正确性
+    *
      * verifyEvidence credential.
      * 
      * @param credentialJson credentials in JSON format
@@ -367,9 +415,18 @@ public class DemoServiceImpl implements DemoService {
     public ResponseData<Boolean> verifyCredential(String credentialJson) {
 
         ResponseData<Boolean> verifyResponse = null;
-        
+
+        // 序列化成 class
         Credential credential = DataToolUtils.deserialize(credentialJson, Credential.class);
+
         // verifyEvidence credential on chain.
+        //
+        // todo chain 上校验 Credential 的正确性
+        //
+        //      校验 CPT 的 json-schame
+        //      校验 Credential 的时效性
+        //      校验 Signature 信息
+        //      校验 ...
         verifyResponse = credentialService.verify(credential);
         logger.info(
             "verifyCredential is result,errorCode:{},errorMessage:{}",

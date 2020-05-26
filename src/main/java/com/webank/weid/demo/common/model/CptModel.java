@@ -17,6 +17,8 @@ public class CptModel {
         example = "did:weid:1:0x19607cf2bc4538b49847b43688acf3befc487a41")
     private String publisher;
 
+
+    // TODO CPT 模板的定义
     @ApiModelProperty(name = "claim", value = "CPT数据类型定义", required = true,
         example = "{\n"
             + "    \"title\": \"cpt\",\n"

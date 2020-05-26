@@ -62,6 +62,8 @@ public class DemoOtherWeIdController {
             || StringUtils.isBlank(createWeIdModel.getPrivateKey())) {
             return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
         }
+
+        // todo  使用自己的 公私钥对, 在本地生成 DID 并将其注册到 chain, 最后将 priKey和weId 存储在本地文件
         return demoService.createWeIdAndSetAttr(
             createWeIdModel.getPublicKey(),
             createWeIdModel.getPrivateKey());

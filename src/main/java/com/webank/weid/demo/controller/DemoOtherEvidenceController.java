@@ -50,12 +50,14 @@ public class DemoOtherEvidenceController {
     private DemoOtherService demoOtherService;
 
     @ApiOperation(value = "将传入Object计算Hash值生成存证上链，返回存证地址。传入的私钥将会成为链上存证的签名方。此签名方和凭证的Issuer可以不是同一方。"
-        + "当传入的object为null时，则会创建一个空的存证并返回其地址，空存证中仅包含签名方，不含Hash值。"
+        + "当传入的object为null时，则会创建一个空的存证并返回其地址 【妈的, 啥地址, 明明就是Evidence Hash】，空存证中仅包含签名方，不含Hash值。"
         + "可以随后调用SetHashValue()方法，为空存证添加Hash值和签名。")
     @PostMapping("/step1/createEvidence")
     public ResponseData<String> createEvidence(
         @ApiParam(name = "credentialModel", value = "电子凭证模板")
         @RequestBody CreateEvidenceModel createEvidenceModel) {
+
+        // 创建 电子存证 返回该 Evidence Hash
         return demoOtherService.createEvidence(createEvidenceModel);
     }
 

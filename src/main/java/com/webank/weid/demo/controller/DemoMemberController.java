@@ -53,6 +53,7 @@ public class DemoMemberController {
 
 
     /**
+    *  委员会创建 WeId 接口
      * create weId without parameters and call the settings property method.
      *
      * @return returns weId and public key
@@ -78,6 +79,7 @@ public class DemoMemberController {
         if (null == authorityIssuerModel) {
             return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
         }
+        // 都是从外头传进来的, 权威发行者的 did 和 name
         String issuer = authorityIssuerModel.getIssuer();
         String authorityName = authorityIssuerModel.getOrgId();
 

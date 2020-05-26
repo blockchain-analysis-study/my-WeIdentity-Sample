@@ -70,6 +70,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
 
     private EvidenceService evidenceService = new EvidenceServiceImpl();
 
+    // 生成 Credential 的Hash
     @Override
     public ResponseData<String> getCredentialHash(VerifyCredentialModel verifyCredentialModel) {
 
@@ -80,9 +81,13 @@ public class DemoOtherServiceImpl implements DemoOtherService {
             if (null == verifyCredentialModel || null == verifyCredentialModel.getCredential()) {
                 return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
             }
+
+            // 根据外部入参, 获取 Credential 详情
             String credentialJson
                 = DataToolUtils.mapToCompactJson(verifyCredentialModel.getCredential());
             Credential credential = DataToolUtils.deserialize(credentialJson, Credential.class);
+
+            // 最终使用Sha3 算出Hash
             ResponseData<String> responseData = credentialService.getCredentialHash(credential);
             logger.info("{} responseData: {}",
                 methodName, DataToolUtils.objToJsonStrWithNoPretty(responseData));
@@ -112,17 +117,26 @@ public class DemoOtherServiceImpl implements DemoOtherService {
 
         CreateCredentialPojoArgs<Map<String, Object>> createCredentialPojoArgs
             = new CreateCredentialPojoArgs<>();
+
+        // 提取外部入参的 cptId
         createCredentialPojoArgs.setCptId(createCredentialPojoModel.getCptId());
+        // 提取外部入参的 发行者WeId
         createCredentialPojoArgs.setIssuer(createCredentialPojoModel.getIssuer());
+
+        // 设置 Credential的过期时间
         createCredentialPojoArgs.setExpirationDate(
             System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 365 * 100);
 
+        // 获取 发行方的 认证方式
         WeIdAuthentication weIdAuthentication =
             getWeIdAuthentication(createCredentialPojoModel.getIssuer());
         createCredentialPojoArgs.setWeIdAuthentication(weIdAuthentication);
 
+        // 提取外部入参的 Claim信息
         createCredentialPojoArgs.setClaim(createCredentialPojoModel.getClaimData());
 
+
+        // 调用 SDK 成省对应的Credential信息
         ResponseData<CredentialPojo> responseData
             = credentialPojoService.createCredential(createCredentialPojoArgs);
         logger.info("{} responseData:{}",
@@ -130,6 +144,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         return responseData;
     }
 
+    // todo 创建 选择性披露 Credential 详情
     @Override
     public ResponseData<CredentialPojo> createSelectiveCredential(
         CreateSelectiveCredentialModel createSelectiveCredentialModel) {
@@ -148,6 +163,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
                 return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
             }
 
+            // 读取外部入参
             CredentialPojo credentialPojo = DataToolUtils.mapToObj(
                 createSelectiveCredentialModel.getCredential(), CredentialPojo.class);
 
@@ -168,6 +184,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         }
     }
 
+    // todo 验证 Credential详情
     @Override
     public ResponseData<Boolean> verify(VerifyCredentialPoJoModel verifyCredentialPoJoModel) {
 
@@ -183,9 +200,11 @@ public class DemoOtherServiceImpl implements DemoOtherService {
                 return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
             }
 
+            // 读取外部入参
             CredentialPojo credentialPojo = DataToolUtils.mapToObj(
                 verifyCredentialPoJoModel.getCredential(), CredentialPojo.class);
 
+            // 开始验证
             ResponseData<Boolean> responseVerify = credentialPojoService.verify(
                 verifyCredentialPoJoModel.getIssuerWeId(), credentialPojo);
             logger.info("{} responseVerify: {}", methodName,
@@ -276,7 +295,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
                 credentialList.add(credentialPojo);
             }
 
-            //创建Challenge
+            //创建Challenge  todo  创建 挑战
             Challenge challenge = Challenge.create(
                 createPresentationModel.getChallengeUserWeId(),
                 String.valueOf(System.currentTimeMillis()));
@@ -336,6 +355,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         }
     }
 
+     // 创建 电子存证
     @Override
     public ResponseData<String> createEvidence(CreateEvidenceModel createEvidenceModel) {
 
@@ -350,6 +370,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         // Hashable为接口，创建Hashable可以new实现类，例如：credentail
         Hashable hashable = new HashString(createEvidenceModel.getHashable());
 
+        // 创建 存证
         ResponseData<String> responseData = evidenceService.createEvidence(hashable,
             getWeIdPrivateKey(createEvidenceModel.getWeid()));
         logger.info("{} responseData: {}", methodName,
@@ -357,12 +378,16 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         return responseData;
     }
 
+
+    // todo 注意了, 这里的 evidenceAddress 其实是 Evidence Hash
     @Override
     public ResponseData<EvidenceInfo> getEvidence(String evidenceAddress) {
 
         logger.info("evidenceAddress:{}",
             DataToolUtils.objToJsonStrWithNoPretty(evidenceAddress));
         String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+        // 根据 Evidence Hash 找到对应的 Evidence 存入Event 的blockNumber, 然后遍历该 Block 中的所有 tx组个的找 logs中的 Evidence 信息
         ResponseData<EvidenceInfo> responseData = evidenceService.getEvidence(evidenceAddress);
         logger.info("{} responseData: {}", methodName,
             DataToolUtils.objToJsonStrWithNoPretty(responseData));
@@ -441,6 +466,9 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         return weIdPrivateKey;
     }
 
+
+    // 根据 weId 选择 认证方式
+    // 这一步是 第三方 在自己本地做的??
     private WeIdAuthentication getWeIdAuthentication(String weid) {
 
         WeIdAuthentication weIdAuthentication = new WeIdAuthentication();

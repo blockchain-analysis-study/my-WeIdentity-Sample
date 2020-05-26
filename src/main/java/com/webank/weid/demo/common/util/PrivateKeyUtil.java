@@ -75,6 +75,7 @@ public class PrivateKeyUtil {
     }
 
     /**
+    * TODO 根据 weId 和 文件路径 加载本地的 私钥文件
      * get the private key by weId.
      * 
      * @param path the path

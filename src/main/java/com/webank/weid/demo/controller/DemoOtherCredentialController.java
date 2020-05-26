@@ -45,6 +45,7 @@ public class DemoOtherCredentialController {
     private DemoOtherService demoOtherService;
 
     /**
+    *  根据凭证信息(Credential 详情) 求得Hash 用于上链, 该Hash 就是 Evidence
      * create weId without parameters and call the settings property method.
      *
      * @return returns weId and public key
@@ -55,6 +56,7 @@ public class DemoOtherCredentialController {
         @ApiParam(name = "credentialModel", value = "电子凭证模板")
         @RequestBody VerifyCredentialModel verifyCredentialModel) {
 
+        // 来一波根据 Credential 的内容生产对应的 Hash
         return demoOtherService.getCredentialHash(verifyCredentialModel);
     }
 }

@@ -52,6 +52,9 @@ public class DemoVerifierController {
     private DemoService demoService;
     
     /**
+    *
+    *  用人单位 校验 Credential 的正确性
+    *
      * verifyEvidence Credential.
      *
      * @param verifyCredentialModel credential in JSON format

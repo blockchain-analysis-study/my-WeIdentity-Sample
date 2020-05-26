@@ -61,6 +61,7 @@ public class DemoIssuerController {
     private DemoService demoService;
 
     /**
+    *  发行方 自己创建 WeId接口
      * create weId without parameters and call the settings property method.
      *
      * @return returns weId and public key
@@ -72,6 +73,7 @@ public class DemoIssuerController {
     }
 
     /**
+    *  发行方在链上 注册 CPT 模板
      * institutional publication of CPT.
      * claim is a JSON object
      * @return returns CptBaseInfo
@@ -87,7 +89,10 @@ public class DemoIssuerController {
             if (null == cptModel) {
                 return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
             }
+
+            // 获取外部入参的 CPT 发布者 todo (发布者的 WeId, did:weid:1:0x19607cf2bc4538b49847b43688acf3befc487a41)
             String publisher = cptModel.getPublisher();
+            // 获取外部入参的 CPT 的Claim信息 todo (一个 json字符串, 详细 看 cptModel 中的定义)
             String claim = DataToolUtils.mapToCompactJson(cptModel.getClaim());
 
             // get the private key from the file according to weId.
@@ -97,6 +102,8 @@ public class DemoIssuerController {
 
             // converting claim in JSON format to map.
             Map<String, Object> claimMap = new HashMap<String, Object>();
+
+            // 将 Claim 的json信息转换成 map
             claimMap = 
                 (Map<String, Object>) DataToolUtils.deserialize(
                     claim,
@@ -104,6 +111,8 @@ public class DemoIssuerController {
                 );
 
             // call method to register CPT on the chain.
+            //
+            // 将 claimMap 和 pusher 做签名，并将 claimMap 和 signature 一起存储链上
             response = demoService.registCpt(publisher, privateKey, claimMap);
             logger.info("registCpt response: {}", DataToolUtils.objToJsonStrWithNoPretty(response));
             return response;
@@ -114,6 +123,7 @@ public class DemoIssuerController {
     }
 
     /**
+    *  TODO 现在 我这就是 发行方, 给某些人颁发 电子凭证哦
      * institutional publication of Credential.
      *
      * @return returns  credential
@@ -132,13 +142,21 @@ public class DemoIssuerController {
                 return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
             }
             // getting cptId data.
+            //
+            // 获取外部入参的 cptId
             Integer cptId = createCredentialModel.getCptId();
             // getting issuer data.
+            //
+            // 获取外部入参的 发行者 weId (和 cptId 匹配)
             String issuer = createCredentialModel.getIssuer();
             // getting claimData data.
+            //
+            // 获取外部入参的 Claim 详情
             String claimData = DataToolUtils.mapToCompactJson(createCredentialModel.getClaimData());
 
             // get the private key from the file according to weId.
+            //
+            // 根据
             String privateKey = PrivateKeyUtil.getPrivateKeyByWeId(PrivateKeyUtil.KEY_DIR, issuer);
             logger.info(
                 "param,cptId:{},issuer:{},privateKey:{},claimData:{}", 
@@ -157,6 +175,8 @@ public class DemoIssuerController {
                 );
 
             // call method to create credentials.
+            //
+            // todo 创建 电子凭证 详情
             response = demoService.createCredential(cptId, issuer, privateKey, claimDataMap);
             logger.info("createCredential response: {}",
                 DataToolUtils.objToJsonStrWithNoPretty(response));

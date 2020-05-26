@@ -54,6 +54,7 @@ public class DemoOtherCredentialPoJoController {
     private DemoOtherService demoOtherService;
 
 
+    // todo 这个暂时没不出来和 DemoIssuerController 中的 `/step3/createCredential` 差异是多大
     @ApiOperation(value = "传入Credential信息生成Credential整体的Hash值，一般在生成Evidence时调用。")
     @PostMapping("/step1/createCredentialPoJo")
     public ResponseData<CredentialPojo> createCredentialPoJo(
@@ -78,9 +79,12 @@ public class DemoOtherCredentialPoJoController {
         @ApiParam(name = "verifyCredentialPoJoModel", value = "验证电子凭证模板")
         @RequestBody VerifyCredentialPoJoModel verifyCredentialPoJoModel) {
 
+
+        // TODO 用人单位验证 Credential
         return demoOtherService.verify(verifyCredentialPoJoModel);
     }
 
+    // 创建 用户画像策略 E
     @ApiOperation(value = "创建PresentationPolicyE。")
     @PostMapping("/step4/createPresentationPolicyE")
     public ResponseData<PresentationPolicyE> createPresentationPolicyE(
@@ -90,6 +94,7 @@ public class DemoOtherCredentialPoJoController {
         return demoOtherService.createPresentationPolicyE(createPresentationPolicyEModel);
     }
 
+    // todo  创建 用户画像
     @ApiOperation(value = "创建Presentation。")
     @PostMapping("/step5/createPresentation")
     public ResponseData<PresentationE> createPresentation(
@@ -99,12 +104,16 @@ public class DemoOtherCredentialPoJoController {
         return demoOtherService.createPresentation(createPresentationModel);
     }
 
+
+
     @ApiOperation(value = "传入CredentialPojo信息生成CredentialPojo整体的Hash值，一般在生成Evidence时调用。")
     @PostMapping("/step6/getCredentialPoJoHash")
     public ResponseData<String> getCredentialPoJoHash(
         @ApiParam(name = "getCredentialHashModel", value = "CredentialPojo模板")
         @RequestBody GetCredentialHashModel getCredentialHashModel) {
 
+
+        // todo 使用了 Sha3
         return demoOtherService.getCredentialPoJoHash(getCredentialHashModel);
     }
 
