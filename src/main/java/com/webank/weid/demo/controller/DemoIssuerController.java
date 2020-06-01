@@ -177,6 +177,8 @@ public class DemoIssuerController {
             // call method to create credentials.
             //
             // todo 创建 电子凭证 详情
+            //
+            // 这里就有选着性披露等
             response = demoService.createCredential(cptId, issuer, privateKey, claimDataMap);
             logger.info("createCredential response: {}",
                 DataToolUtils.objToJsonStrWithNoPretty(response));

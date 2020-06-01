@@ -54,7 +54,13 @@ public class DemoOtherCredentialPoJoController {
     private DemoOtherService demoOtherService;
 
 
-    // todo 这个暂时没不出来和 DemoIssuerController 中的 `/step3/createCredential` 差异是多大
+    // todo 这个暂时看不出来和 DemoIssuerController 中的 `/step3/createCredential` 差异是多大
+
+    /**
+     * 生成 CredentialPojo
+     * @param createCredentialPojoModel
+     * @return
+     */
     @ApiOperation(value = "传入Credential信息生成Credential整体的Hash值，一般在生成Evidence时调用。")
     @PostMapping("/step1/createCredentialPoJo")
     public ResponseData<CredentialPojo> createCredentialPoJo(
@@ -84,7 +90,7 @@ public class DemoOtherCredentialPoJoController {
         return demoOtherService.verify(verifyCredentialPoJoModel);
     }
 
-    // 创建 用户画像策略 E
+    // 创建 Credential表现形式的策略 E
     @ApiOperation(value = "创建PresentationPolicyE。")
     @PostMapping("/step4/createPresentationPolicyE")
     public ResponseData<PresentationPolicyE> createPresentationPolicyE(
@@ -94,13 +100,21 @@ public class DemoOtherCredentialPoJoController {
         return demoOtherService.createPresentationPolicyE(createPresentationPolicyEModel);
     }
 
-    // todo  创建 用户画像
+    // todo  创建 凭证表现形式 <这个是对外的, 也包含了 对外的CrredentialPojo>
+
+    /**
+     * TODO 超级重要
+     *
+     * @param createPresentationModel
+     * @return
+     */
     @ApiOperation(value = "创建Presentation。")
     @PostMapping("/step5/createPresentation")
     public ResponseData<PresentationE> createPresentation(
         @ApiParam(name = "createPresentationModel", value = "创建Presentation模板")
         @RequestBody CreatePresentationModel createPresentationModel) {
 
+        // 创建 凭证表现形式
         return demoOtherService.createPresentation(createPresentationModel);
     }
 

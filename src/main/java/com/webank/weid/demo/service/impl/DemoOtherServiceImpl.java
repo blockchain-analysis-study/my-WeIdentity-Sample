@@ -270,6 +270,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
         }
     }
 
+    // 创建 Credential表现形式
     @Override
     public ResponseData<PresentationE> createPresentation(
         CreatePresentationModel createPresentationModel) {
@@ -309,7 +310,7 @@ public class DemoOtherServiceImpl implements DemoOtherService {
             WeIdAuthentication weIdAuthentication
                 = getWeIdAuthentication(createPresentationModel.getWeId());
 
-            //创建Presentation
+            // todo 创建Presentation
             ResponseData<PresentationE>  presentationE =
                 credentialPojoService.createPresentation(
                     credentialList, presentationPolicyE, challenge, weIdAuthentication);

@@ -22,6 +22,7 @@ public class JsonTransportationSerializeModel {
         example = "0", allowableValues = "range[0,1]")
     private String encodeType;
 
+    // Presentation的示例
     @ApiModelProperty(name = "presentationE", value = "待序列化对象", required = true,
         example = "{\n"
             + "    \"context\": [\n"
